@@ -23,7 +23,7 @@ def _read_env(key, default=""):
         pass
     return default
 
-REDIRECT_URI = _read_env("STRIDE_REDIRECT_URI", "http://localhost:5000/callback")
+REDIRECT_URI = _read_env("STRIDE_REDIRECT_URI", "https://ja12sr34.pythonanywhere.com/callback")
 
 STRAVA_AUTH_URL  = "https://www.strava.com/oauth/authorize"
 STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"
@@ -31,7 +31,7 @@ STRAVA_API_BASE  = "https://www.strava.com/api/v3"
 
 GOOGLE_CLIENT_ID     = lambda: _read_env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = lambda: _read_env("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI  = _read_env("GOOGLE_REDIRECT_URI", "http://localhost:5000/google/callback")
+GOOGLE_REDIRECT_URI  = _read_env("GOOGLE_REDIRECT_URI", "https://ja12sr34.pythonanywhere.com/google/callback")
 
 GOOGLE_AUTH_URL   = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL  = "https://oauth2.googleapis.com/token"
