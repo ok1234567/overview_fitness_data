@@ -1,0 +1,7 @@
+.env
+*.log
+__pycache__/
+*.pyc
+peloton_cache.json
+google_token.json
+.DS_Store
