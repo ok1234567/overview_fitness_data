@@ -891,7 +891,7 @@ function renderFuel(d) {
 function renderFuelHeader(d) {
   // Weight display
   const weightEl = document.getElementById('fuelWeight');
-  if (weightEl) weightEl.textContent = d.weight_lbs + ' lbs';
+  if (weightEl) weightEl.textContent = d.weight_lbs + ' kg';
 
   // Google Calendar status
   const gcEl = document.getElementById('fuelGCStatus');
@@ -1110,7 +1110,7 @@ async function updateWeight() {
     body: JSON.stringify({ weight_lbs: val }),
   });
   if (res.ok) {
-    document.getElementById('fuelWeight').textContent = val + ' lbs';
+    document.getElementById('fuelWeight').textContent = val + ' kg';
     input.value = '';
     // Reload fuel plan with new weight
     window._fuelLoaded = false;

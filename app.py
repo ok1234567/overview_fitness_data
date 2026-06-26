@@ -31,7 +31,7 @@ STRAVA_API_BASE  = "https://www.strava.com/api/v3"
 
 GOOGLE_CLIENT_ID     = lambda: _read_env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = lambda: _read_env("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI  = _read_env("GOOGLE_REDIRECT_URI", "https://ja12sr34.pythonanywhere.com/google/callback")
+GOOGLE_REDIRECT_URI  = "https://ja12sr34.pythonanywhere.com/google/callback"
 
 GOOGLE_AUTH_URL   = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL  = "https://oauth2.googleapis.com/token"
@@ -53,7 +53,7 @@ def cache_get(key):
 def cache_set(key, val):
     _cache[key] = {"val": val, "ts": datetime.now()}
 
-def m_to_km(m): 
+def m_to_km(m):
     return round(m / 1000.0, 2)
 
 def mps_to_pace(mps):
@@ -65,7 +65,7 @@ def s_to_hms(s):
     h,m,sec = int(s//3600),int((s%3600)//60),int(s%60)
     return f"{h}h {m}m" if h else f"{m}m {sec}s"
 
-def elev_m(m): 
+def elev_m(m):
     return round(m) # Substitui a conversão de pés (ft) para manter a elevação em metros
 
 def get_headers(): return {"Authorization": f"Bearer {session.get('access_token')}"}
@@ -387,6 +387,13 @@ def index():
     if not session.get("access_token"): return render_template_string(LOGIN_PAGE)
     return render_template_string(DASHBOARD_PAGE)
 
+@app.route("/debug/google")
+def debug_google():
+    return {
+        "GOOGLE_REDIRECT_URI": "https://ja12sr34.pythonanywhere.com/google/callback",
+        "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID")
+    }
+
 @app.route("/login")
 def login():
     url = (f"{STRAVA_AUTH_URL}?client_id={CLIENT_ID()}&redirect_uri={REDIRECT_URI}"
@@ -656,7 +663,7 @@ def api_fuel_plan():
     try:
         from fuel import classify_day, plan_day, DAY_TYPE_COLOR
 
-        weight_lbs = float(_read_env("ATHLETE_WEIGHT_LBS", "185"))
+        weight_kg = float(_read_env("ATHLETE_WEIGHT_KG", "73"))
 
         # ── Past 7 days from Strava ──────────────────────────────────────
         runs = fetch_all_runs()
@@ -797,7 +804,7 @@ def api_fuel_plan():
                 except Exception:
                     pass
 
-            day_plan = plan_day(ds, weight_lbs, day_type, source, run_name, run_miles,
+            day_plan = plan_day(ds, weight_kg, day_type, source, run_name, run_miles,
                                 peloton_category=peloton_category)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
@@ -809,7 +816,7 @@ def api_fuel_plan():
 
         return jsonify({
             "days":             days,
-            "weight_lbs":       weight_lbs,
+            "weight_lbs":       weight_kg,
             "google_connected": google_connected,
         })
 
@@ -831,7 +838,7 @@ def api_training_week():
         from fuel import classify_day, classify_runna_event, plan_day, DAY_TYPE_COLOR, classify_activity, TRAINING_TYPES
         from peloton import build_weekly_plan, refresh_cache, get_cache_status
 
-        weight_lbs = float(_read_env("ATHLETE_WEIGHT_LBS", "185"))
+        weight_kg = float(_read_env("ATHLETE_WEIGHT_KG", "73"))
 
         # ── Fetch Strava activities ──────────────────────────────────────
         runs = fetch_all_runs()
@@ -912,7 +919,7 @@ def api_training_week():
                 run_name  = None
                 run_miles = 0.0
 
-            day_plan = plan_day(ds, weight_lbs, day_type, source, run_name, run_miles)
+            day_plan = plan_day(ds, weight_kg, day_type, source, run_name, run_miles)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
             day_plan["is_future"]     = is_future
@@ -933,7 +940,7 @@ def api_training_week():
             "week":             weekly,
             "google_connected": google_connected,
             "cache_status":     status,
-            "weight_lbs":       weight_lbs,
+            "weight_lbs":       weight_kg,
         })
 
     except Exception as e:
@@ -964,34 +971,34 @@ def api_fuel_weight():
         weight = float(data.get("weight_lbs", 0))
         if weight < 100 or weight > 400:
             return jsonify({"error": "invalid weight"}), 400
- 
+
         here = os.path.dirname(os.path.abspath(__file__))
         env_path = os.path.join(here, ".env")
- 
+
         # Read existing .env
         try:
             with open(env_path) as f:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = []
- 
-        # Update or append ATHLETE_WEIGHT_LBS
+
+        # Update or append ATHLETE_WEIGHT_KG
         updated = False
         new_lines = []
         for line in lines:
-            if line.strip().startswith("ATHLETE_WEIGHT_LBS="):
-                new_lines.append(f"ATHLETE_WEIGHT_LBS={weight}\n")
+            if line.strip().startswith("ATHLETE_WEIGHT_KG="):
+                new_lines.append(f"ATHLETE_WEIGHT_KG={weight}\n")
                 updated = True
             else:
                 new_lines.append(line)
         if not updated:
-            new_lines.append(f"ATHLETE_WEIGHT_LBS={weight}\n")
- 
+            new_lines.append(f"ATHLETE_WEIGHT_KG={weight}\n")
+
         with open(env_path, "w") as f:
             f.writelines(new_lines)
- 
+
         return jsonify({"ok": True, "weight_lbs": weight})
- 
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -17,8 +17,8 @@ Athlete profile:
 import re
 import math
 
-HEIGHT_IN  = 73
-EST_MAX_HR = 190
+HEIGHT_IN  = 68,90
+EST_MAX_HR = 198
 
 DAY_TYPES = ["rest", "easy", "moderate", "hard", "long"]
 
@@ -49,24 +49,24 @@ PELOTON_FUEL_MAP = {
 
 # Fixed gram targets — not % of TDEE
 MACRO_TARGETS = {
-    "rest":     {"protein_g": 200, "carbs_g": 150, "fat_g": 75},
-    "easy":     {"protein_g": 205, "carbs_g": 237, "fat_g": 78},
-    "moderate": {"protein_g": 210, "carbs_g": 312, "fat_g": 80},
-    "hard":     {"protein_g": 215, "carbs_g": 412, "fat_g": 83},
-    "long":     {"protein_g": 220, "carbs_g": 487, "fat_g": 85},
+    "rest":     {"protein_g": 160, "carbs_g": 150, "fat_g": 70},
+    "easy":     {"protein_g": 160, "carbs_g": 237, "fat_g": 75},
+    "moderate": {"protein_g": 165, "carbs_g": 312, "fat_g": 75},
+    "hard":     {"protein_g": 170, "carbs_g": 412, "fat_g": 80},
+    "long":     {"protein_g": 175, "carbs_g": 487, "fat_g": 85},
 }
 
 ACTIVITY_MULTIPLIER = {
-    "rest":     1.35,
-    "easy":     1.55,
-    "moderate": 1.65,
-    "hard":     1.80,
-    "long":     1.95,
+    "rest":     1,
+    "easy":     1,
+    "moderate": 1.35,
+    "hard":     1.35,
+    "long":     1.35,
 }
 
 EXTRA_BURN = {
     "rest":     0,
-    "easy":     350,
+    "easy":     0,
     "moderate": 550,
     "hard":     700,
     "long":     900,
@@ -96,10 +96,10 @@ LOW_INTENSITY_TYPES = {
 }
 
 
-def compute_bmr(weight_lbs: float, height_in: int = HEIGHT_IN, age: int = 32) -> float:
+def compute_bmr(weight_kg: float, height_in: int = HEIGHT_IN, age: int = 32) -> float:
     """Mifflin-St Jeor BMR for a male athlete. Returns kcal/day."""
-    kg = weight_lbs * 0.453592
-    cm = height_in * 2.54
+    kg = weight_kg
+    cm = 175
     return (10 * kg) + (6.25 * cm) - (5 * age) + 5
 
 
@@ -372,7 +372,7 @@ def timing_guidance(day_type: str) -> dict:
 
 def plan_day(
     date_str: str,
-    weight_lbs: float,
+    weight_kg: float,
     day_type: str,
     source: str = "strava",
     run_name: str = None,
@@ -385,7 +385,7 @@ def plan_day(
     If peloton_category is provided and day_type is rest, adjusts
     macros and timing to reflect the cross-training load.
     """
-    bmr = compute_bmr(weight_lbs)
+    bmr = compute_bmr(weight_kg)
 
     # Adjust effective day type based on Peloton workout
     effective_type = day_type
@@ -426,7 +426,7 @@ def plan_day(
 
 
 if __name__ == "__main__":
-    WEIGHT = 220
+    WEIGHT = 73
 
     print("=" * 60)
     print("STRIDE FUEL ENGINE — SELF TEST")
