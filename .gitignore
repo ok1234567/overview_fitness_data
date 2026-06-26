@@ -5,3 +5,4 @@ __pycache__/
 peloton_cache.json
 google_token.json
 .DS_Store
+git_push.sh
