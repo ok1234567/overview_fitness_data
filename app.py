@@ -300,7 +300,7 @@ def compute_training_load(activity):
     distance    = activity.get("distance", 0)
 
     # Intensity factor: use HR % of estimated max (198 default)
-    est_max_hr = float(_read_env("ESTIM_MAX_HR", "198"))
+    est_max_hr = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
     intensity = round((avg_hr / est_max_hr) * 100) if avg_hr else None
 
     # Trimp-style load estimate
@@ -664,6 +664,8 @@ def api_fuel_plan():
         from fuel import classify_day, plan_day, DAY_TYPE_COLOR
 
         weight_kg = float(_read_env("ATHLETE_WEIGHT_KG", "73"))
+        height_cm = float(_read_env("ATHLETE_HEIGHT_CM", "180"))
+        age = int(_read_env("ATHLETE_AGE", "27"))
 
         # ── Past 7 days from Strava ──────────────────────────────────────
         runs = fetch_all_runs()
@@ -804,7 +806,7 @@ def api_fuel_plan():
                 except Exception:
                     pass
 
-            day_plan = plan_day(ds, weight_kg, day_type, source, run_name, run_miles,
+            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_miles,
                                 peloton_category=peloton_category)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
@@ -839,6 +841,8 @@ def api_training_week():
         from peloton import build_weekly_plan, refresh_cache, get_cache_status
 
         weight_kg = float(_read_env("ATHLETE_WEIGHT_KG", "73"))
+        height_cm = float(_read_env("ATHLETE_HEIGHT_CM", "180"))
+        age = int(_read_env("ATHLETE_AGE", "27"))
 
         # ── Fetch Strava activities ──────────────────────────────────────
         runs = fetch_all_runs()
@@ -919,7 +923,7 @@ def api_training_week():
                 run_name  = None
                 run_miles = 0.0
 
-            day_plan = plan_day(ds, weight_kg, day_type, source, run_name, run_miles)
+            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_miles)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
             day_plan["is_future"]     = is_future
@@ -1046,7 +1050,7 @@ def api_performance():
             r["_dt"] = datetime.strptime(r["start_date_local"][:10], "%Y-%m-%d")
         runs.sort(key=lambda r: r["_dt"])
 
-        EST_MAX_HR = 198
+        EST_MAX_HR = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
 
         # ── ATL/CTL (Acute/Chronic Training Load) ──────────────────────────────
         # TRIMP per run

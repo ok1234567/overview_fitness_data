@@ -10,11 +10,25 @@ Macro philosophy (Weight Loss Target: 65-67kg):
   - Calories: ~1680 rest -> ~2750 long
 """
 
+import os
 import re
 import math
 
-HEIGHT_IN  = 68.90
-EST_MAX_HR = 198
+def _read_env(key, default=""):
+    val = os.environ.get(key, "")
+    if val: return val
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(here, ".env")) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(key + "="):
+                    return line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    return default
+
+EST_MAX_HR = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
 
 DAY_TYPES = ["rest", "easy", "moderate", "hard", "long"]
 
@@ -92,10 +106,9 @@ LOW_INTENSITY_TYPES = {
 }
 
 
-def compute_bmr(weight_kg: float, height_in: float = HEIGHT_IN, age: int = 32) -> float:
+def compute_bmr(weight_kg: float, height_cm: float, age: int) -> float:
     """Mifflin-St Jeor BMR for a male athlete. Fixed hardcoded values."""
-    cm = height_in * 2.54
-    return (10 * weight_kg) + (6.25 * cm) - (5 * age) + 5
+    return (10 * weight_kg) + (6.25 * height_cm) - (5 * age) + 5
 
 
 def tdee_for_day(bmr: float, day_type: str) -> float:
@@ -368,6 +381,8 @@ def timing_guidance(day_type: str) -> dict:
 def plan_day(
     date_str: str,
     weight_kg: float,
+    weight_cm: float,
+    age: int,
     day_type: str,
     source: str = "strava",
     run_name: str = None,
@@ -380,7 +395,7 @@ def plan_day(
     If peloton_category is provided and day_type is rest, adjusts
     macros and timing to reflect the cross-training load.
     """
-    bmr = compute_bmr(weight_kg)
+    bmr = compute_bmr(weight_kg, weight_cm, age)
 
     # Adjust effective day type based on Peloton workout
     effective_type = day_type
@@ -416,21 +431,23 @@ def plan_day(
         "bmr":              round(bmr),
         "tdee":             tdee,
         "macros":           macros,
-        "timing":           timing,
+        "timing":           timing
     }
 
 
 if __name__ == "__main__":
-    WEIGHT = 73
+    WEIGHT = float(_read_env("ATHLETE_WEIGHT_KG", "73"))
+    HEIGHT_CM = float(_read_env("ATHLETE_HEIGHT_CM", "175"))
+    AGE = int(_read_env("ATHLETE_AGE", "27"))
 
     print("=" * 60)
     print("STRIDE FUEL ENGINE — SELF TEST")
-    print(f"Athlete: {WEIGHT} lbs, 6'1\", age 32")
-    print(f"BMR: {round(compute_bmr(WEIGHT))} kcal/day")
+    print(f"Athlete: {WEIGHT} kg, {HEIGHT_CM} cm, age {AGE}")
+    print(f"BMR: {round(compute_bmr(WEIGHT, HEIGHT_CM, AGE))} kcal/day")
     print("=" * 60)
 
     for dt in DAY_TYPES:
-        plan = plan_day("2026-05-14", WEIGHT, dt, source="test")
+        plan = plan_day("2026-05-14", WEIGHT, HEIGHT_CM, AGE, dt, source="test")
         m = plan["macros"]
         print(f"\n[{dt.upper()}]  {m['calories']} kcal")
         print(f"  Carbs:   {m['carbs_g']}g  ({m['carb_pct']}%)")
