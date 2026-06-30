@@ -300,7 +300,7 @@ def compute_training_load(activity):
     distance    = activity.get("distance", 0)
 
     # Intensity factor: use HR % of estimated max (198 default)
-    est_max_hr = float(_read_env("ESTIM_MAX_HR", "198"))
+    est_max_hr = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
     intensity = round((avg_hr / est_max_hr) * 100) if avg_hr else None
 
     # Trimp-style load estimate
