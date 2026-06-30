@@ -891,7 +891,7 @@ function renderFuel(d) {
 function renderFuelHeader(d) {
   // Weight display
   const weightEl = document.getElementById('fuelWeight');
-  if (weightEl) weightEl.textContent = d.weight_lbs + ' kg';
+  if (weightEl) weightEl.textContent = d.weight_kg + ' kg';
 
   // Google Calendar status
   const gcEl = document.getElementById('fuelGCStatus');
@@ -1107,7 +1107,7 @@ async function updateWeight() {
   const res = await fetch('/api/fuel/weight', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ weight_lbs: val }),
+    body: JSON.stringify({ weight_kg: val }),
   });
   if (res.ok) {
     document.getElementById('fuelWeight').textContent = val + ' kg';
