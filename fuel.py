@@ -3,21 +3,17 @@ fuel.py — Stride nutrition engine
 Classifies training days and computes personalized macro targets.
 Integrates with Strava (all activity types) and Runna via Google Calendar.
 
-Macro philosophy:
-  - Protein: 200-220g daily, every day — non-negotiable foundation
-  - Carbs: hard periodization — rest=150g, easy=237g, moderate=312g, hard=412g, long=487g
-  - Fat: steady 75-85g regardless of day type
-  - Calories: ~2,400 rest → ~4,100 long
-
-Athlete profile:
-  HEIGHT_IN = 73   (6'1")
-  EST_MAX_HR = 190
+Macro philosophy (Weight Loss Target: 65-67kg):
+  - Protein: 160-170g daily — non-negotiable foundation to protect muscle mass
+  - Carbs: dynamic periodization — rest=130g, easy=200g, moderate=250g, hard=300g, long=350g
+  - Fat: steady 60-75g (hormonal function and joint health)
+  - Calories: ~1680 rest -> ~2750 long
 """
 
 import re
 import math
 
-HEIGHT_IN  = 68,90
+HEIGHT_IN  = 68.90
 EST_MAX_HR = 198
 
 DAY_TYPES = ["rest", "easy", "moderate", "hard", "long"]
@@ -49,27 +45,27 @@ PELOTON_FUEL_MAP = {
 
 # Fixed gram targets — not % of TDEE
 MACRO_TARGETS = {
-    "rest":     {"protein_g": 160, "carbs_g": 150, "fat_g": 70},
-    "easy":     {"protein_g": 160, "carbs_g": 237, "fat_g": 75},
-    "moderate": {"protein_g": 165, "carbs_g": 312, "fat_g": 75},
-    "hard":     {"protein_g": 170, "carbs_g": 412, "fat_g": 80},
-    "long":     {"protein_g": 175, "carbs_g": 487, "fat_g": 85},
+    "rest":     {"protein_g": 160, "carbs_g": 130, "fat_g": 60},  # ~1700 kcal
+    "easy":     {"protein_g": 160, "carbs_g": 200, "fat_g": 65},  # ~2025 kcal
+    "moderate": {"protein_g": 165, "carbs_g": 250, "fat_g": 70},  # ~2290 kcal
+    "hard":     {"protein_g": 170, "carbs_g": 300, "fat_g": 75},  # ~2555 kcal
+    "long":     {"protein_g": 170, "carbs_g": 350, "fat_g": 75},  # ~2755 kcal
 }
 
 ACTIVITY_MULTIPLIER = {
-    "rest":     1,
-    "easy":     1,
-    "moderate": 1.35,
-    "hard":     1.35,
-    "long":     1.35,
+    "rest":     1.20,
+    "easy":     1.35,
+    "moderate": 1.50,
+    "hard":     1.65,
+    "long":     1.80,
 }
 
 EXTRA_BURN = {
     "rest":     0,
     "easy":     0,
-    "moderate": 550,
-    "hard":     700,
-    "long":     900,
+    "moderate": 0,
+    "hard":     0,
+    "long":     0,
 }
 
 # Strava activity types that count as training
@@ -96,16 +92,15 @@ LOW_INTENSITY_TYPES = {
 }
 
 
-def compute_bmr(weight_kg: float, height_in: int = HEIGHT_IN, age: int = 32) -> float:
-    """Mifflin-St Jeor BMR for a male athlete. Returns kcal/day."""
-    kg = weight_kg
-    cm = 175
-    return (10 * kg) + (6.25 * cm) - (5 * age) + 5
+def compute_bmr(weight_kg: float, height_in: float = HEIGHT_IN, age: int = 32) -> float:
+    """Mifflin-St Jeor BMR for a male athlete. Fixed hardcoded values."""
+    cm = height_in * 2.54
+    return (10 * weight_kg) + (6.25 * cm) - (5 * age) + 5
 
 
 def tdee_for_day(bmr: float, day_type: str) -> float:
     """TDEE = BMR x activity multiplier + extra burn estimate."""
-    multiplier = ACTIVITY_MULTIPLIER.get(day_type, 1.4)
+    multiplier = ACTIVITY_MULTIPLIER.get(day_type, 1.2)
     extra      = EXTRA_BURN.get(day_type, 0)
     return round(bmr * multiplier + extra)
 
@@ -160,15 +155,15 @@ def classify_activity(
 
 def _classify_strength(avg_hr: float, moving_time_sec: int) -> str:
     duration_min = moving_time_sec / 60
-    if duration_min < 20:
+    if duration_min < 30:
         return "easy"
     if avg_hr:
         hr_pct = avg_hr / EST_MAX_HR
         if hr_pct >= 0.75:   return "hard"
         elif hr_pct >= 0.60: return "moderate"
         else:                return "easy"
-    if duration_min >= 60:   return "hard"
-    elif duration_min >= 35: return "moderate"
+    if duration_min >= 90:   return "hard"
+    elif duration_min >= 45: return "moderate"
     else:                    return "easy"
 
 
