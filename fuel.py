@@ -10,6 +10,7 @@ Macro philosophy (Weight Loss Target: 65-67kg):
   - Calories: ~1680 rest -> ~2750 long
 """
 
+import os
 import re
 import math
 
