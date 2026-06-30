@@ -13,7 +13,19 @@ Macro philosophy (Weight Loss Target: 65-67kg):
 import re
 import math
 
-from app import _read_env
+def _read_env(key, default=""):
+    val = os.environ.get(key, "")
+    if val: return val
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(here, ".env")) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(key + "="):
+                    return line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    return default
 
 EST_MAX_HR = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
 

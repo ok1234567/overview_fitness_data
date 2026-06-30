@@ -1046,7 +1046,7 @@ def api_performance():
             r["_dt"] = datetime.strptime(r["start_date_local"][:10], "%Y-%m-%d")
         runs.sort(key=lambda r: r["_dt"])
 
-        EST_MAX_HR = 198
+        EST_MAX_HR = float(_read_env("ATHLETE_ESTIM_MAX_HR", "198"))
 
         # ── ATL/CTL (Acute/Chronic Training Load) ──────────────────────────────
         # TRIMP per run
