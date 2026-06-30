@@ -5,7 +5,6 @@ from flask import Flask, redirect, request, session, jsonify, render_template_st
 import requests
 
 app = Flask(__name__)
-app.secret_key = "stride-local-secret-key-do-not-share"
 
 def CLIENT_ID():     return _read_env("STRAVA_CLIENT_ID")
 def CLIENT_SECRET(): return _read_env("STRAVA_CLIENT_SECRET")
@@ -22,6 +21,8 @@ def _read_env(key, default=""):
     except Exception:
         pass
     return default
+
+app.secret_key = _read_env("FLASK_SECRET_KEY", os.urandom(24).hex())
 
 REDIRECT_URI = _read_env("STRIDE_REDIRECT_URI", "https://ja12sr34.pythonanywhere.com/callback")
 
