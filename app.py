@@ -819,7 +819,7 @@ def api_fuel_plan():
 
         return jsonify({
             "days":             days,
-            "weight_lbs":       weight_kg,
+            "weight_kg":        weight_kg,
             "google_connected": google_connected,
         })
 
@@ -945,7 +945,7 @@ def api_training_week():
             "week":             weekly,
             "google_connected": google_connected,
             "cache_status":     status,
-            "weight_lbs":       weight_kg,
+            "weight_kg":        weight_kg,
         })
 
     except Exception as e:
@@ -968,12 +968,12 @@ def api_peloton_refresh():
 
 @app.route("/api/fuel/weight", methods=["POST"])
 def api_fuel_weight():
-    """Update ATHLETE_WEIGHT_LBS in the .env file."""
+    """Update ATHLETE_WEIGHT_KG in the .env file."""
     if not session.get("access_token"):
         return jsonify({"error": "not authenticated"}), 401
     try:
         data = request.get_json()
-        weight = float(data.get("weight_lbs", 0))
+        weight = float(data.get("weight_kg", 0))
         if weight < 100 or weight > 400:
             return jsonify({"error": "invalid weight"}), 400
 
@@ -1002,7 +1002,7 @@ def api_fuel_weight():
         with open(env_path, "w") as f:
             f.writelines(new_lines)
 
-        return jsonify({"ok": True, "weight_lbs": weight})
+        return jsonify({"ok": True, "weight_kg": weight})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2030,7 +2030,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);line-height:
             <span id="fuelGCStatus"></span>
             <span style="font-size:.68rem;color:var(--muted)">Weight: <span id="fuelWeight">—</span></span>
             <div style="display:flex;gap:4px;align-items:center">
-              <input id="fuelWeightInput" type="number" placeholder="lbs"
+              <input id="fuelWeightInput" type="number" placeholder="kg"
                 style="width:64px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:.68rem;padding:2px 6px;border-radius:2px"
                 onkeydown="if(event.key==='Enter')updateWeight()">
               <button class="insight-btn" onclick="updateWeight()">set</button>
