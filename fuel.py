@@ -143,7 +143,7 @@ def macros_for_day(tdee: float, day_type: str, protein_g: int = None) -> dict:
 
 def classify_activity(
     activity_type: str,
-    distance_miles: float = 0.0,
+    distance_km: float = 0.0,
     avg_hr: float = None,
     moving_time_sec: int = 0,
 ) -> str:
@@ -161,7 +161,7 @@ def classify_activity(
         return _classify_strength(avg_hr, moving_time_sec)
 
     if activity_type in ("Run", "VirtualRun", "TrailRun"):
-        return classify_day(distance_miles, avg_hr, moving_time_sec)
+        return classify_day(distance_km, avg_hr, moving_time_sec)
 
     return _classify_cardio(avg_hr, moving_time_sec)
 
@@ -195,22 +195,22 @@ def _classify_cardio(avg_hr: float, moving_time_sec: int) -> str:
 
 
 def classify_day(
-    distance_miles: float = 0.0,
+    distance_km: float = 0.0,
     avg_hr: float = None,
     moving_time_sec: int = 0,
 ) -> str:
     """Classify a completed run. Returns one of: rest, easy, moderate, hard, long"""
-    if distance_miles < 2.0:
+    if distance_km < 2.0:
         return "rest"
-    if distance_miles >= 10.0 or moving_time_sec >= 5400:
+    if distance_km >= 10.0 or moving_time_sec >= 5400:
         return "long"
     if avg_hr:
         hr_pct = avg_hr / EST_MAX_HR
         if hr_pct < 0.65:   return "easy"
-        elif hr_pct < 0.75: return "moderate" if distance_miles >= 5.0 else "easy"
+        elif hr_pct < 0.75: return "moderate" if distance_km >= 5.0 else "easy"
         else:               return "hard"
-    if distance_miles < 5.0:   return "easy"
-    elif distance_miles < 8.0: return "moderate"
+    if distance_km < 5.0:   return "easy"
+    elif distance_km < 8.0: return "moderate"
     else:                      return "hard"
 
 
@@ -232,22 +232,22 @@ def classify_runna_event(title: str) -> str:
         return "hard"
     if any(k in t for k in ["easy", "recovery", "shakeout", "jog"]):
         km = _extract_km(title)
-        miles = km * 0.621371 if km else 0
+        km = km if km else 0
         mins = _extract_minutes(title)
-        if miles >= 10 or (mins and mins >= 90): return "long"
+        if km >= 10 or (mins and mins >= 90): return "long"
         return "easy"
     if any(k in t for k in ["progression", "steady", "aerobic", "general aerobic"]):
         km = _extract_km(title)
-        miles = km * 0.621371 if km else 0
-        if miles >= 10: return "long"
+        km = km if km else 0
+        if km >= 10: return "long"
         return "moderate"
 
     km = _extract_km(title)
-    miles = km * 0.621371 if km else 0
+    km = km if km else 0
     mins = _extract_minutes(title)
-    if miles >= 10 or (mins and mins >= 90):    return "long"
-    elif miles >= 6 or (mins and mins >= 50):   return "moderate"
-    elif miles > 0 or (mins and mins > 0):      return "easy"
+    if km >= 10 or (mins and mins >= 90):    return "long"
+    elif km >= 6 or (mins and mins >= 50):   return "moderate"
+    elif km > 0 or (mins and mins > 0):      return "easy"
     return "easy"
 
 
@@ -386,7 +386,7 @@ def plan_day(
     day_type: str,
     source: str = "strava",
     run_name: str = None,
-    run_miles: float = 0.0,
+    run_km: float = 0.0,
     activity_type: str = None,
     peloton_category: str = None,
 ) -> dict:
@@ -425,7 +425,7 @@ def plan_day(
         "color":            DAY_TYPE_COLOR.get(display_type, DAY_TYPE_COLOR.get(day_type, "yellow")),
         "source":           source,
         "run_name":         run_name,
-        "run_miles":        run_miles,
+        "run_km":           run_km,
         "activity_type":    activity_type,
         "peloton_category": peloton_category,
         "bmr":              round(bmr),
@@ -461,13 +461,13 @@ if __name__ == "__main__":
         ("WeightTraining", 0,    155, 3600, "60 min lifting, HR 155"),
         ("WeightTraining", 0,    130, 2700, "45 min lifting, HR 130"),
         ("Crossfit",       0,    168, 2400, "40 min CrossFit, HR 168"),
-        ("Run",            6.5,  145, 3600, "6.5mi run, HR 145"),
-        ("Run",            12.0, 138, 6600, "12mi long run, HR 138"),
+        ("Run",            6.5,  145, 3600, "6.5km run, HR 145"),
+        ("Run",            12.0, 138, 6600, "12km long run, HR 138"),
         ("Ride",           0,    142, 7200, "2hr bike ride, HR 142"),
         ("Walk",           0,    None,3600, "1hr walk"),
         ("Yoga",           0,    None,3600, "1hr yoga"),
         ("Workout",        0,    None,2400, "40 min workout no HR"),
     ]
-    for atype, miles, hr, secs, label in test_activities:
-        result = classify_activity(atype, miles, hr, secs)
+    for atype, km, hr, secs, label in test_activities:
+        result = classify_activity(atype, km, hr, secs)
         print(f"  {label:<42} -> {result}")
