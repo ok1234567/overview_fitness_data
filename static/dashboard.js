@@ -92,7 +92,7 @@ function buildTrainDayCard(day) {
       + '</div>'
       + '<div class="train-run-name">' + (day.run_name || day.timing.label) + '</div>'
       + '<div class="train-run-meta" style="color:' + dayTypeColor + '">'
-      + day.day_type.toUpperCase() + (day.run_miles > 0 ? ' · ' + day.run_miles + ' km' : '')
+      + day.day_type.toUpperCase() + (day.run_km > 0 ? ' · ' + day.run_km + ' km' : '')
       + '</div>';
   }
 
@@ -479,7 +479,7 @@ function renderDrawer(data){
     <div style="margin-bottom:8px"><div style="font-size:.72rem;color:var(--muted)">${s.date} · ${s.time_start}</div>
       <div style="display:flex;gap:8px;margin-top:4px"><a href="${s.strava_url}" target="_blank" class="strava-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>View on Strava</a></div></div>
     <div class="meta-grid">
-      <div class="meta-cell"><div class="meta-label">Distance</div><div class="meta-val or">${s.miles} km</div></div>
+      <div class="meta-cell"><div class="meta-label">Distance</div><div class="meta-val or">${s.km} km</div></div>
       <div class="meta-cell"><div class="meta-label">Avg Pace</div><div class="meta-val">${s.avg_pace}/km</div></div>
       <div class="meta-cell"><div class="meta-label">Moving Time</div><div class="meta-val">${s.moving_time}</div></div>
       <div class="meta-cell"><div class="meta-label">Elev Gain</div><div class="meta-val gr">${s.elev_gain} m</div></div>
@@ -537,13 +537,13 @@ async function load(){
   const d=await res.json();
   const t=d.totals;
   document.getElementById('topAthl').textContent=d.athlete?.firstname||'';
-  document.getElementById('s-wk-mi').textContent=t.week.miles+' km';
+  document.getElementById('s-wk-mi').textContent=t.week.km+' km';
   document.getElementById('s-wk-sub').textContent=`${t.week.runs} run${t.week.runs!==1?'s':''} · ${t.week.time}`;
-  document.getElementById('s-mo-mi').textContent=t.month.miles+' km';
+  document.getElementById('s-mo-mi').textContent=t.month.km+' km';
   document.getElementById('s-mo-sub').textContent=`${t.month.runs} runs · ${t.month.time}`;
-  document.getElementById('s-yr-mi').textContent=t.year.miles+' km';
+  document.getElementById('s-yr-mi').textContent=t.year.km+' km';
   document.getElementById('s-yr-sub').textContent=`${t.year.runs} runs · ${t.year.time}`;
-  document.getElementById('s-at-mi').textContent=t.all_miles+' km';
+  document.getElementById('s-at-mi').textContent=t.all_km+' km';
   document.getElementById('s-at-sub').textContent=`${t.all_runs} total runs`;
   document.getElementById('s-str').textContent=d.streaks.current+' days';
   document.getElementById('s-str-sub').textContent=`best: ${d.streaks.best} days`;
@@ -561,7 +561,7 @@ function renderOverviewCharts(){
   if(!d) return;
   const wkLabels=d.weekly_spark.labels.map(l=>{const dt=new Date(l+'T00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});});
   const wkChart=mk('wkChart','bar',wkLabels,
-    [{data:d.weekly_spark.miles,backgroundColor:'rgba(87,148,242,0.65)',hoverBackgroundColor:'rgba(87,148,242,1)',borderRadius:2,borderSkipped:false}]);
+    [{data:d.weekly_spark.km,backgroundColor:'rgba(87,148,242,0.65)',hoverBackgroundColor:'rgba(87,148,242,1)',borderRadius:2,borderSkipped:false}]);
   if(wkChart){
     document.getElementById('wkChart').addEventListener('click',e=>{
       const pts=wkChart.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
@@ -569,14 +569,14 @@ function renderOverviewCharts(){
       const idx=pts[0].index;
       const weekLabel=wkLabels[idx];
       const runDetails=d.weekly_spark.run_details && d.weekly_spark.run_details[idx];
-      const totalMiles=d.weekly_spark.miles[idx];
+      const totalKm=d.weekly_spark.km[idx];
       if(runDetails && runDetails.length>0){
-        showWeekPopover(weekLabel, {miles:totalMiles, runs:runDetails.length, run_details:runDetails}, d);
+        showWeekPopover(weekLabel, {km:totalKm, runs:runDetails.length, run_details:runDetails}, d);
       }
     });
   }
   mk('moChart','bar',d.monthly_chart.labels,
-    [{data:d.monthly_chart.miles,backgroundColor:'rgba(115,191,105,0.65)',borderRadius:2,borderSkipped:false}]);
+    [{data:d.monthly_chart.km,backgroundColor:'rgba(115,191,105,0.65)',borderRadius:2,borderSkipped:false}]);
 
   const paceChart=mk('paceChart','line',d.pace_trend.labels,[{
     data:d.pace_trend.pace_sec,borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,0.07)',
@@ -587,14 +587,14 @@ function renderOverviewCharts(){
   mk('distChart','bar',d.dist_dist.labels,[{data:d.dist_dist.counts,backgroundColor:['rgba(242,73,92,.7)','rgba(245,166,35,.7)','rgba(115,191,105,.7)','rgba(87,148,242,.7)','rgba(184,119,217,.7)'],borderRadius:2,borderSkipped:false}]);
 
   const pg=document.getElementById('prGrid');
-  [{label:'Longest Run',val:d.prs.longest?d.prs.longest.miles+' km':'—',det:d.prs.longest?.date||'',id:d.prs.longest?.id},
+  [{label:'Longest Run',val:d.prs.longest?d.prs.longest.km+' km':'—',det:d.prs.longest?.date||'',id:d.prs.longest?.id},
    {label:'Fastest 5K',val:d.prs['5k']?.pace||'—',det:d.prs['5k']?d.prs['5k'].time+' · '+d.prs['5k'].date:'—',id:d.prs['5k']?.id},
    {label:'Fastest 10K',val:d.prs['10k']?.pace||'—',det:d.prs['10k']?d.prs['10k'].time+' · '+d.prs['10k'].date:'—',id:d.prs['10k']?.id},
    {label:'Half Marathon',val:d.prs.half?.pace||'—',det:d.prs.half?d.prs.half.time+' · '+d.prs.half.date:'no half yet',id:d.prs.half?.id}
   ].forEach(p=>{const el=document.createElement('div');el.className='pr-item';el.innerHTML=`<div class="pr-type">${p.label}</div><div class="pr-val">${p.val}</div><div class="pr-det">${p.det}</div>`;if(p.id)el.onclick=()=>openRun(p.id);else el.style.cursor='default';pg.appendChild(el);});
 
   const wb=document.getElementById('wkBody');
-  d.weekly_table.forEach((w,i)=>{const tr=document.createElement('tr');const lid=w.run_ids&&w.run_ids.length>0?w.run_ids[w.run_ids.length-1]:null;if(lid){tr.className='clickable';tr.onclick=()=>openRun(lid);}tr.innerHTML=`<td>${w.week} ${i===0?'<span class="bk bkb">now</span>':''}</td><td class="tn">${w.runs}</td><td><span class="bk bkg">${w.miles} km</span></td><td class="tn">${w.pace}</td><td class="tn">${w.time}</td><td class="tn">${w.elev>0?w.elev+' m':'—'}</td>`;wb.appendChild(tr);});
+  d.weekly_table.forEach((w,i)=>{const tr=document.createElement('tr');const lid=w.run_ids&&w.run_ids.length>0?w.run_ids[w.run_ids.length-1]:null;if(lid){tr.className='clickable';tr.onclick=()=>openRun(lid);}tr.innerHTML=`<td>${w.week} ${i===0?'<span class="bk bkb">now</span>':''}</td><td class="tn">${w.runs}</td><td><span class="bk bkg">${w.km} km</span></td><td class="tn">${w.pace}</td><td class="tn">${w.time}</td><td class="tn">${w.elev>0?w.elev+' m':'—'}</td>`;wb.appendChild(tr);});
 
   const rb=document.getElementById('rcBody');
   const isMobile=window.innerWidth<=768;
@@ -607,7 +607,7 @@ function renderOverviewCharts(){
       tr.innerHTML='<td colspan="7" style="padding:10px 12px">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
         +'<span style="font-weight:500;color:var(--text);font-size:.8rem">'+r.name+'</span>'
-        +'<span class="bk bko">'+r.miles+' km</span>'
+        +'<span class="bk bko">'+r.km+' km</span>'
         +'</div>'
         +'<div style="display:flex;gap:12px;font-size:.7rem;color:var(--muted2)">'
         +'<span>'+r.date+'</span>'
@@ -622,7 +622,7 @@ function renderOverviewCharts(){
       const tr=document.createElement('tr');
       tr.className='clickable';
       tr.onclick=()=>openRun(r.id);
-      tr.innerHTML='<td><span class="run-link">'+r.name+'</span></td><td class="tn">'+r.date+'</td><td><span class="bk bko">'+r.miles+'</span></td><td class="tn">'+r.pace+'</td><td class="tn">'+r.time+'</td><td class="tn">'+(r.hr!=='—'?Math.round(r.hr)+' bpm':'—')+'</td><td class="tn">'+(r.elev>0?r.elev+' m':'—')+'</td>';
+      tr.innerHTML='<td><span class="run-link">'+r.name+'</span></td><td class="tn">'+r.date+'</td><td><span class="bk bko">'+r.km+'</span></td><td class="tn">'+r.pace+'</td><td class="tn">'+r.time+'</td><td class="tn">'+(r.hr!=='—'?Math.round(r.hr)+' bpm':'—')+'</td><td class="tn">'+(r.elev>0?r.elev+' m':'—')+'</td>';
       rb.appendChild(tr);
     }
   });
@@ -696,8 +696,8 @@ async function loadPerformance(){
   // Long runs
   if(d.long_run_chart.labels.length>0){
     mk('longRunChart','bar',d.long_run_chart.labels,[
-      {data:d.long_run_chart.miles,backgroundColor:'rgba(87,148,242,.65)',borderRadius:2,borderSkipped:false,yAxisID:'y'},
-    ],{scales:{x:{grid:{color:'#1a1c22'},ticks:{color:'#5a5f72',font:{size:9},maxRotation:45}},y:{grid:{color:'#1a1c22'},ticks:{color:'#5a5f72',font:{size:10}},beginAtZero:true}},plugins:{tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} mi`}}}});
+      {data:d.long_run_chart.km,backgroundColor:'rgba(87,148,242,.65)',borderRadius:2,borderSkipped:false,yAxisID:'y'},
+    ],{scales:{x:{grid:{color:'#1a1c22'},ticks:{color:'#5a5f72',font:{size:9},maxRotation:45}},y:{grid:{color:'#1a1c22'},ticks:{color:'#5a5f72',font:{size:10}},beginAtZero:true}},plugins:{tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} km`}}}});
   }
 
   // Heatmap
@@ -706,7 +706,7 @@ async function loadPerformance(){
   d.heatmap.forEach(cell=>{
     const div=document.createElement('div');
     div.className=`hm-cell hm-${cell.level}`;
-    div.title=cell.miles>0?`${cell.date}: ${cell.miles} km`:cell.date;
+    div.title=cell.km>0?`${cell.date}: ${cell.km} km`:cell.date;
     grid.appendChild(div);
   });
   // month labels
@@ -800,7 +800,7 @@ function showWeekPopover(weekLabel, week, allData){
   // Use pre-built run_details if available, otherwise fall back to recent lookup
   const runDetails = week.run_details || (week.run_ids||[]).map(id=>{
     const r=allData.recent.find(r=>r.id===id);
-    return r || {id, name:'Run', miles:'?', pace:'—', date:'—'};
+    return r || {id, name:'Run', km:'?', pace:'—', date:'—'};
   });
 
   const pop=document.createElement('div');
@@ -811,7 +811,7 @@ function showWeekPopover(weekLabel, week, allData){
   const hdr=document.createElement('div');
   hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';
   hdr.innerHTML='<span style="font-family:Syne,sans-serif;font-weight:700;color:#d4d8e2;font-size:.85rem">Week of '+weekLabel+'</span>'
-    +'<span style="font-size:.72rem;color:#73bf69">'+week.miles+' km · '+week.runs+' run'+(week.runs!==1?'s':'')+'</span>';
+    +'<span style="font-size:.72rem;color:#73bf69">'+week.km+' km · '+week.runs+' run'+(week.runs!==1?'s':'')+'</span>';
   pop.appendChild(hdr);
 
   // Run rows
@@ -819,7 +819,7 @@ function showWeekPopover(weekLabel, week, allData){
     const row=document.createElement('div');
     row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:2px;cursor:pointer;border-bottom:1px solid #252830';
     row.innerHTML='<span style="font-size:.78rem;color:#d4d8e2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">'+r.name+'</span>'
-      +'<span style="font-size:.75rem;color:#f5a623;margin-left:8px;white-space:nowrap">'+r.miles+' km &nbsp; '+r.pace+'/km</span>';
+      +'<span style="font-size:.75rem;color:#f5a623;margin-left:8px;white-space:nowrap">'+r.km+' km &nbsp; '+r.pace+'/km</span>';
     row.addEventListener('mouseover',()=>{row.style.background='#252830';});
     row.addEventListener('mouseout',()=>{row.style.background='';});
     row.addEventListener('click',()=>{closePopover();openRun(r.id);});
@@ -1009,7 +1009,7 @@ function renderFuelDetail(day) {
           <div style="font-family:var(--sans);font-size:1rem;font-weight:700;color:${dotColor}">${t.label}</div>
           <div style="font-size:.65rem;color:${sourceColor}">${sourceLabel}</div>
         </div>
-        <div style="font-size:.7rem;color:var(--muted)">${day.display_date}${day.run_name ? ' · ' + day.run_name : ''}${day.run_miles > 0 ? ' · ' + day.run_miles + ' km' : ''}</div>
+        <div style="font-size:.7rem;color:var(--muted)">${day.display_date}${day.run_name ? ' · ' + day.run_name : ''}${day.run_km > 0 ? ' · ' + day.run_km + ' km' : ''}</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:var(--sans);font-size:1.4rem;font-weight:700;color:var(--orange)">${m.calories}</div>
@@ -1190,7 +1190,7 @@ function buildTrainDayCard(day) {
       + '</div>'
       + '<div class="train-run-name">' + (day.run_name || day.timing.label) + '</div>'
       + '<div class="train-run-meta" style="color:' + dayTypeColor + '">'
-      + day.day_type.toUpperCase() + (day.run_miles > 0 ? ' · ' + day.run_miles + ' km' : '')
+      + day.day_type.toUpperCase() + (day.run_km > 0 ? ' · ' + day.run_km + ' km' : '')
       + '</div>';
   }
 

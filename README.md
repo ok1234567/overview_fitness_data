@@ -7,7 +7,7 @@ Runs entirely on your Mac — no cloud, no subscription, no data sharing.
 
 ## What it shows
 
-- **At a Glance** — miles and runs this week, month, year, and all time
+- **At a Glance** — kilometers and runs this week, month, year, and all time
 - **Streaks** — current daily run streak and your longest ever
 - **Personal Records** — longest run, fastest 5K pace, fastest 10K pace
 - **Trend Charts** — weekly mileage bars + monthly mileage line chart

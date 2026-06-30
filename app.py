@@ -145,12 +145,12 @@ def compute_stats(runs):
         r["_dt"] = datetime.strptime(r["start_date_local"][:10], "%Y-%m-%d")
     runs.sort(key=lambda r: r["_dt"])
 
-    weeks = defaultdict(lambda: {"runs":[],"miles":0,"time":0,"elev":0})
+    weeks = defaultdict(lambda: {"runs":[],"km":0,"time":0,"elev":0})
     for r in runs:
         mon = r["_dt"] - timedelta(days=r["_dt"].weekday())
         key = mon.strftime("%Y-%m-%d")
         weeks[key]["runs"].append(r)
-        weeks[key]["miles"] += m_to_km(r["distance"])
+        weeks[key]["km"] += m_to_km(r["distance"])
         weeks[key]["time"]  += r.get("moving_time", 0)
         weeks[key]["elev"]  += r.get("total_elevation_gain", 0)
 
@@ -162,7 +162,7 @@ def compute_stats(runs):
         tt = sum(r.get("moving_time",0) for r in wdata["runs"])
         weekly_table.append({
             "week":  dt.strftime("%b %d"), "runs": len(wdata["runs"]),
-            "miles": round(wdata["miles"],1), "time": s_to_hms(wdata["time"]),
+            "km": round(wdata["km"],1), "time": s_to_hms(wdata["time"]),
             "pace":  mps_to_pace(td/tt) if td>0 and tt>0 else "—",
             "elev":  elev_m(wdata["elev"]),
             "run_ids": [r["id"] for r in wdata["runs"]],
@@ -170,31 +170,31 @@ def compute_stats(runs):
             "run_details": [{
                 "id":    r["id"],
                 "name":  r.get("name", "Run"),
-                "miles": m_to_km(r["distance"]),
+                "km": m_to_km(r["distance"]),
                 "pace":  mps_to_pace(r.get("average_speed", 0)),
                 "date":  r["_dt"].strftime("%a %b %d"),
             } for r in reversed(wdata["runs"])],
         })
 
-    months = defaultdict(lambda: {"miles":0,"runs":0})
+    months = defaultdict(lambda: {"km":0,"runs":0})
     for r in runs:
         key = r["_dt"].strftime("%Y-%m")
-        months[key]["miles"] += m_to_km(r["distance"])
+        months[key]["km"] += m_to_km(r["distance"])
         months[key]["runs"]  += 1
     sm = sorted(months.items())[-12:]
     monthly_chart = {
         "labels": [datetime.strptime(m[0],"%Y-%m").strftime("%b '%y") for m in sm],
-        "miles":  [round(m[1]["miles"],1) for m in sm],
+        "km":  [round(m[1]["km"],1) for m in sm],
     }
 
     sorted_spark_weeks = sorted(weeks.items())[-20:]
     weekly_spark = {
         "labels": [w[0] for w in sorted_spark_weeks],
-        "miles":  [round(w[1]["miles"],1) for w in sorted_spark_weeks],
+        "km":  [round(w[1]["km"],1) for w in sorted_spark_weeks],
         "run_details": [[{
             "id":    r["id"],
             "name":  r.get("name","Run"),
-            "miles": m_to_km(r["distance"]),
+            "km": m_to_km(r["distance"]),
             "pace":  mps_to_pace(r.get("average_speed",0)),
             "date":  r["_dt"].strftime("%a %b %d"),
         } for r in reversed(w[1]["runs"])] for w in sorted_spark_weeks],
@@ -203,7 +203,7 @@ def compute_stats(runs):
     pace_runs = [r for r in runs if r.get("average_speed",0)>0][-30:]
     pace_trend = {
         "labels":   [r["_dt"].strftime("%b %d") for r in pace_runs],
-        "pace_sec": [round(1609.344/r["average_speed"]) for r in pace_runs],
+        "pace_sec": [round(1000/r["average_speed"]) for r in pace_runs],
         "run_ids":  [r["id"] for r in pace_runs],
     }
 
@@ -220,10 +220,10 @@ def compute_stats(runs):
     tw = [r for r in runs if r["_dt"] >= week_init]
     tm = [r for r in runs if r["_dt"] >= now.replace(day=1)]
     ty = [r for r in runs if r["_dt"] >= now.replace(month=1,day=1)]
-    def agg(s): return {"runs":len(s),"miles":round(sum(m_to_km(r["distance"]) for r in s),1),"time":s_to_hms(sum(r.get("moving_time",0) for r in s))}
+    def agg(s): return {"runs":len(s),"km":round(sum(m_to_km(r["distance"]) for r in s),1),"time":s_to_hms(sum(r.get("moving_time",0) for r in s))}
 
     pr_dist = max(runs, key=lambda r: r["distance"])
-    pr_long = {"miles":m_to_km(pr_dist["distance"]),"date":pr_dist["_dt"].strftime("%b %d, %Y"),
+    pr_long = {"km":m_to_km(pr_dist["distance"]),"date":pr_dist["_dt"].strftime("%b %d, %Y"),
                "name":pr_dist.get("name","Run"),"id":pr_dist["id"]}
     pr_5k=pr_10k=pr_hm=None
     for r in runs:
@@ -258,7 +258,7 @@ def compute_stats(runs):
             "id":    r["id"],
             "name":  r.get("name","Run"),
             "date":  r["_dt"].strftime("%a %b %d"),
-            "miles": m_to_km(r["distance"]),
+            "km": m_to_km(r["distance"]),
             "pace":  mps_to_pace(r.get("average_speed",0)),
             "time":  s_to_hms(r.get("moving_time",0)),
             "elev":  elev_m(r.get("total_elevation_gain",0)),
@@ -267,7 +267,7 @@ def compute_stats(runs):
 
     return {
         "totals": {"week":agg(tw),"month":agg(tm),"year":agg(ty),
-                   "all_runs":len(runs),"all_miles":round(sum(m_to_km(r["distance"]) for r in runs),1)},
+                   "all_runs":len(runs),"all_km":round(sum(m_to_km(r["distance"]) for r in runs),1)},
         "streaks": {"current":cs,"best":best},
         "prs": {"longest":pr_long,"5k":fmt_pr(pr_5k),"10k":fmt_pr(pr_10k),"half":fmt_pr(pr_hm)},
         "weekly_table":weekly_table,"monthly_chart":monthly_chart,
@@ -359,14 +359,14 @@ def process_streams(streams_data):
 
     def sample(arr): return [arr[i] for i in idx] if arr else []
 
-    dist_mi   = [round(d/1609.344, 3) for d in sample(dist_raw)]
-    elev_ft   = [round(a*3.28084) for a in sample(alt_raw)] if alt_raw else []
+    dist   = [round(d/1000, 3) for d in sample(dist_raw)]
+    elev   = [round(a) for a in sample(alt_raw)] if alt_raw else []
     hr_pts    = sample(hr_raw)
     pace_pts  = []
     for v in sample(vel_raw):
         if v and v > 0:
-            spm = 1609.344 / v
-            pace_pts.append(round(spm))  # seconds per mile
+            spm = 1000 / v
+            pace_pts.append(round(spm))  # seconds per kilometer
         else:
             pace_pts.append(None)
 
@@ -376,8 +376,8 @@ def process_streams(streams_data):
 
     return {
         "latlng":     map_coords,
-        "distance":   dist_mi,
-        "elevation":  elev_ft,
+        "distance":   dist,
+        "elevation":  elev,
         "hr":         hr_pts,
         "pace":       pace_pts,
     }
@@ -471,7 +471,7 @@ def api_run(run_id):
             t  = sp.get("moving_time", 0)
             splits.append({
                 "split": sp.get("split"),
-                "miles": round(mi / 1609.344, 2),
+                "km": round(mi / 1000, 2),
                 "pace":  mps_to_pace(mi / t) if mi > 0 and t > 0 else "—",
                 "hr":    round(sp["average_heartrate"]) if sp.get("average_heartrate") else "—",
                 "elev":  elev_m(sp.get("elevation_difference", 0)),
@@ -482,7 +482,7 @@ def api_run(run_id):
             "name":         act.get("name", "Run"),
             "date":         dt.strftime("%A, %B %d %Y"),
             "time_start":   dt.strftime("%I:%M %p"),
-            "miles":        m_to_km(act.get("distance", 0)),
+            "km":           m_to_km(act.get("distance", 0)),
             "moving_time":  s_to_hms(act.get("moving_time", 0)),
             "elapsed_time": s_to_hms(act.get("elapsed_time", 0)),
             "avg_pace":     mps_to_pace(act.get("average_speed", 0)),
@@ -736,27 +736,27 @@ def api_fuel_plan():
             # Determine day type and source
             if ds in run_by_date and (is_past or is_today):
                 r            = run_by_date[ds]
-                miles        = m_to_km(r["distance"])
+                km           = m_to_km(r["distance"])
                 avg_hr       = r.get("average_heartrate")
                 mov_time     = r.get("moving_time", 0)
                 activity_type = r.get("type", "Run")
                 from fuel import classify_activity
-                day_type     = classify_activity(activity_type, miles, avg_hr, mov_time)
+                day_type     = classify_activity(activity_type, km, avg_hr, mov_time)
                 source       = "strava"
                 run_name     = r.get("name", "Activity")
-                run_miles    = miles if activity_type in ("Run","VirtualRun","TrailRun") else 0.0
+                run_km    = km if activity_type in ("Run","VirtualRun","TrailRun") else 0.0
             elif ds in runna_by_date:
                 # Planned workout from Runna calendar
                 day_type  = runna_by_date[ds]["day_type"]
                 source    = "runna"
                 run_name  = runna_by_date[ds]["title"]
-                run_miles = 0.0
+                run_km = 0.0
             else:
                 # No data — rest day
                 day_type  = "rest"
                 source    = "rest"
                 run_name  = None
-                run_miles = 0.0
+                run_km = 0.0
 
             # ── Peloton recommendation for rest days ──────────────────
             peloton_rec      = None
@@ -807,7 +807,7 @@ def api_fuel_plan():
                 except Exception:
                     pass
 
-            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_miles,
+            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_km,
                                 peloton_category=peloton_category)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
@@ -905,26 +905,26 @@ def api_training_week():
 
             if ds in run_by_date and (is_past or is_today):
                 r             = run_by_date[ds]
-                miles         = m_to_km(r["distance"])
+                km            = m_to_km(r["distance"])
                 avg_hr        = r.get("average_heartrate")
                 mov_time      = r.get("moving_time", 0)
                 activity_type = r.get("type", "Run")
-                day_type      = classify_activity(activity_type, miles, avg_hr, mov_time)
+                day_type      = classify_activity(activity_type, km, avg_hr, mov_time)
                 source        = "strava"
                 run_name      = r.get("name", "Activity")
-                run_miles     = miles if activity_type in ("Run","VirtualRun","TrailRun") else 0.0
+                run_km        = km if activity_type in ("Run","VirtualRun","TrailRun") else 0.0
             elif ds in runna_by_date:
                 day_type  = runna_by_date[ds]["day_type"]
                 source    = "runna"
                 run_name  = runna_by_date[ds]["title"]
-                run_miles = 0.0
+                run_km = 0.0
             else:
                 day_type  = "rest"
                 source    = "rest"
                 run_name  = None
-                run_miles = 0.0
+                run_km = 0.0
 
-            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_miles)
+            day_plan = plan_day(ds, weight_kg, height_cm, age, day_type, source, run_name, run_km)
             day_plan["is_today"]      = is_today
             day_plan["is_past"]       = is_past
             day_plan["is_future"]     = is_future
@@ -1171,11 +1171,11 @@ def api_performance():
         cal_start -= timedelta(days=cal_start.weekday())
         d = cal_start
         while d <= today:
-            miles = run_date_set.get(d, 0)
+            km = run_date_set.get(d, 0)
             heatmap.append({
                 "date": d.isoformat(),
-                "miles": round(miles, 1),
-                "level": 0 if miles==0 else 1 if miles<3 else 2 if miles<6 else 3 if miles<10 else 4,
+                "km": round(km, 1),
+                "level": 0 if km==0 else 1 if km<3 else 2 if km<6 else 3 if km<10 else 4,
             })
             d += timedelta(days=1)
 
@@ -1186,7 +1186,7 @@ def api_performance():
         )[-20:]
         long_run_chart = {
             "labels": [r["_dt"].strftime("%b %d '%y") for r in long_runs],
-            "miles":  [m_to_km(r["distance"]) for r in long_runs],
+            "km":  [m_to_km(r["distance"]) for r in long_runs],
             "pace":   [round(1000/r["average_speed"]) if r.get("average_speed",0)>0 else None for r in long_runs],
         }
 
@@ -1199,7 +1199,7 @@ def api_performance():
             if not rs2: return None
             return round(sum(1000/r["average_speed"] for r in rs2)/len(rs2))
 
-        def avg_miles_pw(rs):
+        def avg_km_pw(rs):
             if not rs: return 0
             weeks = max(1, len(set((r["_dt"] - timedelta(days=r["_dt"].weekday())).date() for r in rs)))
             return round(sum(m_to_km(r["distance"]) for r in rs)/weeks, 1)
@@ -1210,8 +1210,8 @@ def api_performance():
         if curr_pace and prev_pace:
             pace_delta = prev_pace - curr_pace  # positive = got faster
 
-        curr_mpw = avg_miles_pw(last8w)
-        prev_mpw = avg_miles_pw(prev8w)
+        curr_mpw = avg_km_pw(last8w)
+        prev_mpw = avg_km_pw(prev8w)
 
         result = {
             "fitness_curve":   fitness_curve,
@@ -1275,18 +1275,18 @@ def api_insights():
             r["_dt"] = datetime.strptime(r["start_date_local"][:10], "%Y-%m-%d")
         runs.sort(key=lambda r: r["_dt"])
 
-        weeks = defaultdict(lambda: {"miles":0,"runs":0,"time":0,"hr_sum":0,"hr_n":0,"paces":[]})
+        weeks = defaultdict(lambda: {"km":0,"runs":0,"time":0,"hr_sum":0,"hr_n":0,"paces":[]})
         for r in runs:
             if r["_dt"] < now - timedelta(weeks=12): continue
             mon = (r["_dt"] - timedelta(days=r["_dt"].weekday())).strftime("%Y-%m-%d")
-            weeks[mon]["miles"] += m_to_km(r["distance"])
+            weeks[mon]["km"] += m_to_km(r["distance"])
             weeks[mon]["runs"]  += 1
             weeks[mon]["time"]  += r.get("moving_time", 0)
             if r.get("average_heartrate"):
                 weeks[mon]["hr_sum"] += r["average_heartrate"]
                 weeks[mon]["hr_n"]   += 1
             if r.get("average_speed",0) > 0 and r.get("distance",0) > 3000:
-                weeks[mon]["paces"].append(round(1609.344/r["average_speed"]))
+                weeks[mon]["paces"].append(round(1000/r["average_speed"]))
 
         wk_lines = []
         for wk, wd in sorted(weeks.items()):
@@ -1294,7 +1294,7 @@ def api_insights():
             avg_pace = round(sum(wd["paces"])/len(wd["paces"])) if wd["paces"] else None
             pace_str = f"{int(avg_pace//60)}:{int(avg_pace%60):02d}/km" if avg_pace else "n/a"
             hr_str   = f"{avg_hr}bpm" if avg_hr else "n/a"
-            wk_lines.append(f"  {wk}: {wd['runs']} runs, {round(wd['miles'],1)} km, avg pace {pace_str}, avg HR {hr_str}")
+            wk_lines.append(f"  {wk}: {wd['runs']} runs, {round(wd['km'],1)} km, avg pace {pace_str}, avg HR {hr_str}")
 
         athlete = session.get("athlete", {})
         name = athlete.get("firstname", "the athlete")
@@ -1860,7 +1860,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);line-height:
 
     <!-- Activity heatmap -->
     <div class="panel" style="margin-bottom:6px">
-      <div class="ph"><span class="pt">Activity Heatmap</span><span class="ptag">last 52 weeks · darker = more miles</span></div>
+      <div class="ph"><span class="pt">Activity Heatmap</span><span class="ptag">last 52 weeks · darker = more km</span></div>
       <div class="hm-month-labels" id="hmMonthLabels"></div>
       <div class="heatmap-wrap"><div class="heatmap-grid" id="heatmapGrid"></div></div>
       <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:.62rem;color:var(--muted)">
